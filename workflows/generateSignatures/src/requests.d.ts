@@ -1,0 +1,1 @@
+export function requireEnvironmentVariable(key: String): String;
