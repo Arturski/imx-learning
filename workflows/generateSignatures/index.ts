@@ -2,7 +2,6 @@ import { generateStarkWallet } from '@imtbl/core-sdk'
 import { Wallet } from '@ethersproject/wallet';
 import { BytesLike } from 'ethers';
 import * as dotenv from 'dotenv'
-import * as requests from './requests.js';
 import axios from 'axios'
 
 dotenv.config()
@@ -60,8 +59,11 @@ console.log("------------------------- STARK WALLET ----------------------------
 console.log("Stark Public Key: \t\t" + STARK_PUBLIC_KEY)
 console.log("Stark Private Key: \t\t" + STARK_PRIVATE_KEY + "\n")
 console.log("------------------------- TO BE SIGNED ----------------------------\n")
-console.log("Stark L2 Payload: \t\t" + payloads.data['payload_hash'])
-console.log("Eth L1 Message: \t\t" + payloads.data['signable_message'] + "\n")
+console.log("Stark L2 Payload Hash: \t\t" + payloads.data['payload_hash'])
+console.log("ETH L1 Message: \t\t" + payloads.data['signable_message'] + "\n")
+console.log("------------------------- SIGNATURES ------------------------------\n")
+console.log("STARK L2 Signature: \t\t")
+console.log("ETH L1 Signature : \t\t")
 
 
 
@@ -105,23 +107,6 @@ console.log("Eth L1 Message: \t\t" + payloads.data['signable_message'] + "\n")
 //     recoveryParam: number | null | undefined;
 // };
 
-
-// const ETH_PRIVATE_KEY: String = requireEnvironmentVariable('ETH_PRIVATE_KEY') as String;
-// const ETH_ADDRESS: String = 1requireEnvironmentVariable('ETH_ADDRESS') as String;
-// const ETH_NETWORK: Networkish = requireEnvironmentVariable('ETH_NETWORK') as Networkish;
-// const ALCHEMY_API_KEY: String = requireEnvironmentVariable('ALCHEMY_API_KEY') as String;
-
-// //Setup eth wallet
-// const WALLET = new Wallet(ETH_PRIVATE_KEY as BytesLike)
-// //Setup stark wallet
-// const STARK_WALLET = await generateStarkWallet(WALLET)
-
-// //Store address for later
-// const WALLET_ADDRESS = WALLET.publicKey
-// //const test = await STARK_WALLET
-// //Extract stark private key
-// const STARK_PRIVATE_KEY = await STARK_WALLET.starkKeyPair.getPrivate("hex")
-
 // const ALCHEMY_PROVIDER = new AlchemyProvider(ETH_NETWORK, ALCHEMY_API_KEY);
 
 // const L1_SIGNER = WALLET.connect(ALCHEMY_PROVIDER);
@@ -132,20 +117,6 @@ console.log("Eth L1 Message: \t\t" + payloads.data['signable_message'] + "\n")
 
 // const ETH_MESSAGE = ""
 // const STARK_PAYLOAD = ""
-
-// // await function getStarkPrivateKey(privateKey) {
-// //     const wallet = new Wallet(privateKey);
-// //     const starkWallet = await generateStarkWallet(wallet);
-// //     console.log('wallet address:', wallet.address)
-// //     console.log('stark private key:', starkWallet.starkKeyPair.getPrivate("hex"))
-// // }
-
-
-// let payloads = getSigPayloads(ETH_ADDRESS, STARK_PUB_KEY);
-// console.log("Stark Wallet: " + STARK_WALLET)
-// console.log("Stark Public Key: " + STARK_PUB_KEY)
-// console.log("Eth Public Key: " + ETH_ADDRESS)
-// console.log(payloads)
 
 // //---------------Step1 get stark private key
 // //---------------Step2 get stark public key and signature
