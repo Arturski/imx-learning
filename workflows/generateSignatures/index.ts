@@ -3,6 +3,11 @@ import { Wallet } from '@ethersproject/wallet';
 import { BytesLike } from 'ethers';
 import * as dotenv from 'dotenv'
 import axios from 'axios'
+import { curves, ec } from 'elliptic';
+import BN from 'bn.js';
+import * as encUtils from 'enc-utils';
+import { hash } from 'hash.js'
+
 
 dotenv.config()
 
@@ -26,6 +31,7 @@ function requireEnvironmentVariable(key: string): string {
   return value;
 }
 
+//Set constants
 const ETH_PRIVATE_KEY: string = requireEnvironmentVariable('ETH_PRIVATE_KEY') as string;
 const ETH_ADDRESS: string = requireEnvironmentVariable('ETH_ADDRESS') as string;
 const ETH_NETWORK: string = requireEnvironmentVariable('ETH_NETWORK') as string;
@@ -50,6 +56,64 @@ let payloads = await axios('https://api.sandbox.x.immutable.com/v1/signable-regi
   }
 })
 
+const starkEcOrder = new BN(
+  '08000000 00000010 ffffffff ffffffff b781126d cae7b232 1e66a241 adc64d2f',
+  16,
+);
+
+const starkEc = new ec(
+  new curves.PresetCurve({
+    type: 'short',
+    prime: null,
+    p: '08000000 00000011 00000000 00000000 00000000 00000000 00000000 00000001',
+    a: '00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001',
+    b: '06f21413 efbe40de 150e596d 72f7a8c5 609ad26c 15c915c1 f4cdfcb9 9cee9e89',
+    n: starkEcOrder.toString('hex'),
+    hash: hash.sha256,
+    gRed: false,
+    g: [
+      '1ef15c18599971b7beced415a40f0c7deacfd9b0d1819e03d723d8bc943cfca',
+      '5668060aa49730b7be4801df46ec62de53ecd11abe43a32873000c36e8dc1f',
+    ],
+  }),
+);
+
+function serialize(sig: ec.Signature): string {
+  return encUtils.addHexPrefix(
+    encUtils.padLeft(sig.r.toString('hex'), 64) +
+      encUtils.padLeft(sig.s.toString('hex'), 64),
+  );
+}
+
+/*
+   The function _truncateToN in lib/elliptic/ec/index.js does a shift-right of delta bits,
+   if delta is positive, where
+     delta = msgHash.byteLength() * 8 - starkEx.n.bitLength().
+   This function does the opposite operation so that
+     _truncateToN(fixMsgHashLen(msgHash)) == msgHash.
+  */
+function fixMsgHashLen(msg: string) {
+  msg = encUtils.removeHexPrefix(msg);
+  msg = new BN(msg, 'hex').toString('hex');
+
+  if (msg.length <= 62) {
+    // In this case, msg should not be transformed, as the byteLength() is at most 31,
+    // so delta < 0 (see _truncateToN).
+    return msg;
+  }
+  if (msg.length !== 63) {
+    throw "Problem with message length" //new Error(Errors.StarkCurveInvalidMessageLength);
+  }
+  // In this case delta will be 4 so we perform a shift-left of 4 bits by adding a ZERO_BN.
+  return `${msg}0`;
+}
+
+let keyPair: ec.KeyPair = starkEc.keyFromPrivate(STARK_PRIVATE_KEY, 'hex');
+
+let result = serialize(keyPair.sign(fixMsgHashLen(payloads.data['payload_hash'])))
+
+
+
 console.log("\n------------------------- INPUT VALUES ----------------------------\n")
 console.log("ETH Public Key (Address): \t" + ETH_ADDRESS)
 console.log("ETH Private Key: \t\t" + ETH_PRIVATE_KEY)
@@ -62,129 +126,9 @@ console.log("------------------------- TO BE SIGNED ----------------------------
 console.log("Stark L2 Payload Hash: \t\t" + payloads.data['payload_hash'])
 console.log("ETH L1 Message: \t\t" + payloads.data['signable_message'] + "\n")
 console.log("------------------------- SIGNATURES ------------------------------\n")
-console.log("STARK L2 Signature: \t\t")
+console.log("STARK L2 Signature: \t\t" + result)
 console.log("ETH L1 Signature : \t\t")
 
 
 
 
-
-
-
-
-// import { BytesLike } from '@ethersproject/bytes'
-// import { Networkish } from '@ethersproject/providers';
-// import { generateStarkWallet } from '@imtbl/core-sdk'
-// import { Wallet } from '@ethersproject/wallet';
-// import { getSigPayloads, registerUser } from './src/requests';
-// import { requireEnvironmentVariable } from './src/utils';
-// import { StandardStarkSigner } from './src/starksigner';
-// import { Signer } from '@ethersproject/abstract-signer';
-// import BN from 'bn.js';
-// import * as encUtils from 'enc-utils';
-// import { AlchemyProvider } from '@ethersproject/providers';
-// import { ec } from 'elliptic';
-
-// interface StarkWallet {
-//     path: string;
-//     starkPublicKey: string;
-//     starkKeyPair: ec.KeyPair;
-// }
-
-// type IMXETHSignature = {
-//     signature: string;
-// };
-
-// type registerUserType = {
-//     eth_signature: String,
-//     ether_key: String,
-//     stark_key: String,
-//     stark_signature: String
-// }
-// type SignatureOptions = {
-//     r: BN;
-//     s: BN;
-//     recoveryParam: number | null | undefined;
-// };
-
-// const ALCHEMY_PROVIDER = new AlchemyProvider(ETH_NETWORK, ALCHEMY_API_KEY);
-
-// const L1_SIGNER = WALLET.connect(ALCHEMY_PROVIDER);
-
-// const L2_SIGNER = new StandardStarkSigner(STARK_PRIVATE_KEY);
-
-// const STARK_PUB_KEY = L2_SIGNER.getAddress();
-
-// const ETH_MESSAGE = ""
-// const STARK_PAYLOAD = ""
-
-// //---------------Step1 get stark private key
-// //---------------Step2 get stark public key and signature
-// //---------------Step3 Get signable payloads from API in ./src/requests
-// //---------------Step4 generate signature string for L1
-
-
-//     // const msg: string = process.env.IMX_ETH_PAYLOAD as string;
-
-    
-//     // const l1Wallet = new Wallet(privateKey);
-//     // const l1Signer = l1Wallet.connect(alchemyProvider);
-
-//     // type SignatureOptions = {
-//     //     r: BN;
-//     //     s: BN;
-//     //     recoveryParam: number | null | undefined;
-//     // };
-
-//     // function importRecoveryParam(v: string): number | undefined {
-//     //     return v.trim()
-//     //     ? new BN(v, 16).cmp(new BN(27)) !== -1
-//     //         ? new BN(v, 16).sub(new BN(27)).toNumber()
-//     //         : new BN(v, 16).toNumber()
-//     //     : undefined;
-//     // }
-
-//     // function serializeEthSignature(sig: SignatureOptions): string {
-//     // // This is because golang appends a recovery param
-//     // // https://github.com/ethers-io/ethers.js/issues/823
-//     // return encUtils.addHexPrefix(
-//     //     encUtils.padLeft(sig.r.toString(16), 64) +
-//     //     encUtils.padLeft(sig.s.toString(16), 64) +
-//     //     encUtils.padLeft(sig.recoveryParam?.toString(16) || '', 2),
-//     // );
-//     // }
-
-//     // // used chained with serializeEthSignature. serializeEthSignature(deserializeSignature(...))
-//     // function deserializeSignature(sig: string, size = 64): SignatureOptions {
-//     //     sig = encUtils.removeHexPrefix(sig);
-//     //     return {
-//     //     r: new BN(sig.substring(0, size), 'hex'),
-//     //     s: new BN(sig.substring(size, size * 2), 'hex'),
-//     //     recoveryParam: importRecoveryParam(sig.substring(size * 2, size * 2 + 2)),
-//     //     };
-//     // }
-
-//     // async function signRaw(
-//     //     payload: string,
-//     //     signer: Signer
-//     // ): Promise<string> {
-//     //     const signature = deserializeSignature(await signer.signMessage(payload));
-//     //     return serializeEthSignature(signature);
-//     // }
-
-//     // async function generateIMXETHSignature(ethSigner: Signer): 
-//     // Promise<IMXETHSignature> {
-//     //     const signature = await signRaw(msg, ethSigner);
-//     //     console.log("Message: " + msg);
-//     //     console.log("Signature: " + signature);
-//     //     return {
-//     //         signature
-//     //     };
-//     // }
-
-//     // async function main()  {
-//     //     await generateIMXETHSignature(l1Signer);
-//     // }
-
-//     //---------------Step5 register user
-//     //console.log(registerUser(ETH_SIGNATURE, ETH_ADDRESS, STARK_PUB_KEY, STARK_SIGNATURE))
