@@ -29,6 +29,7 @@ engineCon = psycopg2.connect(database=ENGINE_TARGET,
 
 #SQL queries to be executed
 sqlAPI = '''SELECT imx FROM imx_balance WHERE ether_key=lower('0x7D9148F5ba0520Eb4e8A3073938Cf383Fc9bF390')'''
+
 sqlEngine = '''select a.stark_key, v.id, v.quantized_balance, a.ether_key from accounts a
 inner join vaults v
     on a.stark_key = v.stark_key

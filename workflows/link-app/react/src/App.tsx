@@ -8,6 +8,20 @@ import Bridging from './Bridging';
 
 const App = () => {
 
+  type IframePositionKeys = 'left' | 'right' | 'top' | 'bottom';
+
+  type IframePositionOptions = {
+    [key in IframePositionKeys]?: string;
+  };
+
+  type ConfigurableIframeOptions = null | {
+    className?: string;
+    containerElement?: HTMLElement;
+    protectAgainstGlobalStyleBleed?: boolean;
+    position?: IframePositionOptions;
+  };
+  const linkIframeOptions: ConfigurableIframeOptions = { className: 'my-link-iframe' };
+
   const LINK_URI: string = 'https://link.sandbox.x.immutable.com'
   //const LINK_URI: string = 'https://link.x.immutable.com'
 
@@ -16,7 +30,10 @@ const App = () => {
 
 
   // initialise Immutable X Link SDK
-  const link = new Link(LINK_URI)
+  // const link = new Link(LINK_URI)
+  
+  // initialise Link in iframe
+  const link = new Link(LINK_URI, linkIframeOptions)
   
   // general
   const [tab, setTab] = useState('inventory');
