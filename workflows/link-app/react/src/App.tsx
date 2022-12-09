@@ -13,14 +13,16 @@ const App = () => {
   type IframePositionOptions = {
     [key in IframePositionKeys]?: string;
   };
-
   type ConfigurableIframeOptions = null | {
     className?: string;
     containerElement?: HTMLElement;
     protectAgainstGlobalStyleBleed?: boolean;
     position?: IframePositionOptions;
   };
-  const linkIframeOptions: ConfigurableIframeOptions = { className: 'my-link-iframe' };
+
+  const frame_position: IframePositionKeys = 'left'
+
+  const linkIframeOptions: ConfigurableIframeOptions = { className: 'my-link-iframe'};
 
   const LINK_URI: string = 'https://link.sandbox.x.immutable.com'
   //const LINK_URI: string = 'https://link.x.immutable.com'
