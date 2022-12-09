@@ -1,4 +1,4 @@
-import { generateStarkWallet } from '@imtbl/core-sdk'
+import { createStarkSigner, generateLegacyStarkPrivateKey } from '@imtbl/core-sdk'
 import { Wallet } from '@ethersproject/wallet';
 import { BytesLike } from 'ethers';
 import * as dotenv from 'dotenv'
@@ -36,20 +36,25 @@ const ETH_PRIVATE_KEY: string = requireEnvironmentVariable('ETH_PRIVATE_KEY') as
 const ETH_ADDRESS: string = requireEnvironmentVariable('ETH_ADDRESS') as string;
 const ETH_NETWORK: string = requireEnvironmentVariable('ETH_NETWORK') as string;
 const ALCHEMY_API_KEY: string = requireEnvironmentVariable('ALCHEMY_API_KEY') as string;
-//Setup eth wallet
-const WALLET = new Wallet(ETH_PRIVATE_KEY as BytesLike)
-//Setup stark wallet
-const STARK_WALLET = await generateStarkWallet(WALLET)
 
-//Extract stark private and public keys
-const STARK_PRIVATE_KEY = STARK_WALLET.starkKeyPair.getPrivate("hex")
-const STARK_PUBLIC_KEY = STARK_WALLET.starkPublicKey
+//Setup eth wallet
+const ETH_WALLET = new Wallet(ETH_PRIVATE_KEY as BytesLike)
+
+//Generate Stark Private Key
+const STARK_PRIVATE_KEY = await generateLegacyStarkPrivateKey(ETH_WALLET)
+
+//Create Signer object from private ket
+const STARK_WALLET = createStarkSigner(STARK_PRIVATE_KEY)
+
+//Get public key from signer
+const STARK_PUBLIC_KEY = STARK_WALLET.getAddress()
+//const signature = await STARK_WALLET.signMessage(msg)
 
 let payloads = await axios('https://api.sandbox.x.immutable.com/v1/signable-registration-offchain', {
   method: 'POST',
   data: {
     ether_key: ETH_ADDRESS.toLowerCase(),
-    stark_key: STARK_PUBLIC_KEY.toLowerCase()
+    stark_key: STARK_PUBLIC_KEY
   },
   headers: {
     "Content-Type": "application/json"

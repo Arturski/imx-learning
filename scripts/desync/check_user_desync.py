@@ -1,6 +1,8 @@
 import os
 import psycopg2
 
+USER_ADDRESS = '0x7D9148F5ba0520Eb4e8A3073938Cf383Fc9bF390'
+
 # Get environment variables for Engine
 ENGINE_USER = os.getenv('ENGINE_USER')
 ENGINE_PASSWORD = os.environ.get('ENGINE_PASSWORD')
@@ -28,13 +30,13 @@ engineCon = psycopg2.connect(database=ENGINE_TARGET,
                         port="5432")
 
 #SQL queries to be executed
-sqlAPI = '''SELECT imx FROM imx_balance WHERE ether_key=lower('0x7D9148F5ba0520Eb4e8A3073938Cf383Fc9bF390')'''
+sqlAPI = f'''SELECT imx FROM imx_balance WHERE ether_key=lower('{USER_ADDRESS}')'''
 
-sqlEngine = '''select a.stark_key, v.id, v.quantized_balance, a.ether_key from accounts a
+sqlEngine = f'''select a.stark_key, v.id, v.quantized_balance, a.ether_key from accounts a
 inner join vaults v
     on a.stark_key = v.stark_key
 where
-    a.ether_key = lower('0x7D9148F5ba0520Eb4e8A3073938Cf383Fc9bF390') and v.quantized_balance > 1;'''
+    a.ether_key = lower('{USER_ADDRESS}') and v.quantized_balance > 1;'''
 
 cursorAPI = apiCon.cursor()
 cursorAPI.execute(sqlAPI)
@@ -44,11 +46,13 @@ cursorEng = engineCon.cursor()
 cursorEng.execute(sqlEngine)
 engine_value = cursorEng.fetchall()[0][0]
 
+print('API Value is:')
 print(api_value)
 print(api_value / 1000000000000000000)
 
-print(api_value)
-print(api_value / 1000000000000000000)
+print('Engine Value is:')
+print(engine_value)
+print(engine_value / 1000000000000000000)
 
 apiCon.commit()
 apiCon.close()

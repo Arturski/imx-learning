@@ -13,7 +13,7 @@
     "@ethersproject/abstract-signer": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
     "@ethersproject/wallet": "^5.7.0",
-    "@imtbl/core-sdk": "0.7.0",
+    "@imtbl/core-sdk": "^1.0.0",
     "bn.js": "^5.2.1",
     "dotenv": "^16.0.3",
     "elliptic": "^6.5.4",
